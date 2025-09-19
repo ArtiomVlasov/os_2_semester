@@ -6,23 +6,27 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-void *mythread(void *arg) {
+void *mythread(void *arg)
+{
 	printf("mythread [%d %d %d]: Hello from mythread!\n", getpid(), getppid(), gettid());
 	return NULL;
 }
 
-int main() {
+int main()
+{
 	pthread_t tid;
 	int err;
 
 	printf("main [%d %d %d]: Hello from main!\n", getpid(), getppid(), gettid());
 
 	err = pthread_create(&tid, NULL, mythread, NULL);
-	if (err) {
-	    printf("main: pthread_create() failed: %s\n", strerror(err));
+	if (err)
+	{
+		printf("main: pthread_create() failed: %s\n", strerror(err));
 		return -1;
 	}
 
+	sleep(10);
+	
 	return 0;
 }
-
