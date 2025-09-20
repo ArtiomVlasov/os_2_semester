@@ -7,29 +7,33 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-void *mythread(void *args) {
-  char *str = "Hello world";
-  return str;
+void *mythread(void *args)
+{
+    char *str = "Hello world";
+    return str;
 }
 
-int main() {
-  pthread_t tid;
-  int err;
-  char *str;
+int main()
+{
+    pthread_t tid;
+    int err;
+    char *str;
 
-  err = pthread_create(&tid, NULL, mythread, NULL);
-  if (err) {
-    perror("main: error creating pthread");
-    return -1;
-  }
+    err = pthread_create(&tid, NULL, mythread, NULL);
+    if (err)
+    {
+        printf("main: pthread_create() failed: %s\n", strerror(err));
+        return -1;
+    }
 
-  err = pthread_join(tid, (void **)&str);
-  if (err) {
-    perror("main: error creating pthread");
-    return -1;
-  }
+    err = pthread_join(tid, (void **)&str);
+    if (err)
+    {
+        perror("main: error creating pthread");
+        return -1;
+    }
 
-  printf("main: %s\n", str);
+    printf("main: %s\n", str);
 
-  return 0;
+    return 0;
 }

@@ -44,7 +44,7 @@ int main()
 
     if (err)
     {
-        perror("main: error during thread creation");
+        printf("main: pthread_create() failed: %s\n", strerror(err));
         free(s);
         return -1;
     }

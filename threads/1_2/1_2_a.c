@@ -5,33 +5,37 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-void *mythread(void *arg) {
-  printf("thread: THREAD WAS CREATED\n");
-  printf("thread: return\n");
-  sleep(10);
-  return NULL;
+void *mythread(void *arg)
+{
+    printf("thread: THREAD WAS CREATED\n");
+    printf("thread: return\n");
+    sleep(10);
+    return NULL;
 }
 
-int main() {
-  printf("main: started\n");
-  pthread_t tid;
-  int err;
+int main()
+{
+    printf("main: started\n");
+    pthread_t tid;
+    int err;
 
-  err = pthread_create(&tid, NULL, mythread, NULL);
-  if (err) {
-    perror("main: pthread creating error\n");
-    return -1;
-  }
+    err = pthread_create(&tid, NULL, mythread, NULL);
+    if (err)
+    {
+        printf("main: pthread_create() failed: %s\n", strerror(err));
+        return -1;
+    }
 
-  printf("main: join\n");
+    printf("main: join\n");
 
-  err = pthread_join(tid, NULL);
-  if (err) {
-    perror("main: pthread joining error\n");
-    return -1;
-  }
+    err = pthread_join(tid, NULL);
+    if (err)
+    {
+        perror("main: pthread joining error\n");
+        return -1;
+    }
 
-  printf("main: join finished successfully\n");
+    printf("main: join finished successfully\n");
 
-  return 0;
+    return 0;
 }
