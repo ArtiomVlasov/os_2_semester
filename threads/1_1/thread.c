@@ -26,11 +26,6 @@ int main()
 		return -1;
 	}
 
-	err = pthread_join(err, NULL);
-	if (err) {
-      perror("main: pthread joining error");
-      return -1;
-    }
-	
-	return 0;
+	pthread_exit(NULL);
+
 }
