@@ -7,6 +7,7 @@
 void *mythread(void *args)
 {
     unsigned long long cntr = 0;
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
     while (1)
     {
         ++cntr;
@@ -19,7 +20,7 @@ int main()
 {
     pthread_t tid;
     int err;
-
+     
     err = pthread_create(&tid, NULL, mythread, NULL);
     if (err)
     {
