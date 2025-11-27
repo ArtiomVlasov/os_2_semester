@@ -7,6 +7,7 @@ void *my_thread_function(void *arg)
 {
     printf("mythread [%d %d %d]\n", getpid(), getppid(), gettid());
     printf("Поток запущен с аргументом: %s\n", (char *)arg);
+    sleep(2);
     int *res = malloc(sizeof(int));
     *res = 5;
     return res;
@@ -25,12 +26,13 @@ int main()
         printf("Cannot create thread");
         return 1;
     }
-    void *retval;
-    mythread_join(&thread, &retval);
-    int result = *(int *)retval;  
-    free(retval);
     sleep(5);
-    printf("Thread finished with arg %d\n", result);
+    // void *retval;
+    mythread_detach(&thread);
+    // int result = *(int *)retval;  
+    // free(retval);
+
+    // printf("Thread finished with arg %d\n", result);
 
     return 0;
 }

@@ -25,6 +25,7 @@ static _Atomic int cleanup_thread_started = 0;
 
 void *cleanup_thread_func(void *arg) {
     (void)arg;
+    
     while (1) {
         pthread_mutex_lock(&cleanup_mutex);
         while (cleanup_list == NULL) {
@@ -125,7 +126,6 @@ int mythread_detach(mythread_t *thread) {
         fprintf(stderr, "Error: Thread already detached\n");
         return -1;
     }
-
     (*thread)->joinable = 0;
     printf("thread detached\n");
     if (atomic_exchange(&cleanup_thread_started, 1) == 0) {

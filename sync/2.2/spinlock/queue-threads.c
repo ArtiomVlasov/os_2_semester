@@ -41,6 +41,7 @@ void *reader(void *arg) {
 
 	while (1) {
 		int val = -1;
+		pthread_testcancel();
 		int ok = queue_get(q, &val);
 		if (!ok)
 			continue;
@@ -59,13 +60,15 @@ void *writer(void *arg) {
 	queue_t *q = (queue_t *)arg;
 	printf("writer [%d %d %d]\n", getpid(), getppid(), gettid());
 
-	set_cpu(1);
+	set_cpu(2);
 
 	while (1) {
+		pthread_testcancel();
 		int ok = queue_add(q, i);
 		if (!ok)
 			continue;
 		i++;
+		usleep(1);
 	}
 
 	return NULL;
@@ -73,12 +76,13 @@ void *writer(void *arg) {
 
 int main() {
 	pthread_t tid;
+	pthread_t tid1;
 	queue_t *q;
 	int err;
 
 	printf("main [%d %d %d]\n", getpid(), getppid(), gettid());
 
-	q = queue_init(1000000);
+	q = queue_init(10000);
 
 	err = pthread_create(&tid, NULL, reader, q);
 	if (err) {
@@ -88,14 +92,36 @@ int main() {
 
 	sched_yield();
 
-	err = pthread_create(&tid, NULL, writer, q);
+	err = pthread_create(&tid1, NULL, writer, q);
 	if (err) {
 		printf("main: pthread_create() failed: %s\n", strerror(err));
 		return -1;
 	}
 
-	// TODO: join threads
+	sleep(10);
 
+	err = pthread_cancel(tid);
+	if (err) {
+		printf("main: pthread_cancel() failed: %s\n", strerror(err));
+		abort;
+	}
+	err = pthread_cancel(tid1);
+	if (err) {
+		printf("main: pthread_cancel() failed: %s\n", strerror(err));
+		abort;
+	}
+	err = pthread_join(tid, NULL);
+    if (err) {
+        printf("main: pthread_join() failed: %s\n", strerror(err));
+        abort();
+    }
+	err = pthread_join(tid1, NULL);
+    if (err) {
+        printf("main: pthread_join() failed: %s\n", strerror(err));
+        abort();
+    }
+
+    queue_destroy(q);
 	pthread_exit(NULL);
 
 	return 0;
