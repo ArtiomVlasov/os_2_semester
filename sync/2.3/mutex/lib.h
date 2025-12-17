@@ -3,6 +3,8 @@
 
 #include <pthread.h>
 #include <stdint.h>
+#include <stdatomic.h>
+
 
 #define MAX_STR 100
 
@@ -37,6 +39,6 @@ extern uint64_t desc_iterations;
 extern uint64_t eq_iterations;
 extern uint64_t swap_success[3];
 
-extern volatile int stop_flag;
+extern atomic_int stop_flag;
 
 #endif 

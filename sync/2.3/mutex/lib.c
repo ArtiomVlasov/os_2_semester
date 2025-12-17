@@ -4,6 +4,8 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <stdatomic.h>
+
 
 uint64_t asc_iterations = 0;
 uint64_t desc_iterations = 0;
@@ -15,7 +17,7 @@ pthread_mutex_t desc_mtx = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t eq_mtx = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t swap_mtx[3] = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
 
-volatile int stop_flag = 0;
+atomic_int stop_flag = 0;
 
 static void random_string(char *buf, size_t len)
 {
@@ -98,13 +100,13 @@ void *ascending_thread(void *arg)
 
             size_t la = strlen(a->value);
             size_t lb = strlen(b->value);
+            pthread_mutex_unlock(&b->sync);
+            pthread_mutex_unlock(&prev->sync);
             if (la < lb)
             {
                 counter++;
             }
 
-            pthread_mutex_unlock(&b->sync);
-            pthread_mutex_unlock(&prev->sync);
             prev = a;
             a = a->next;
             pthread_mutex_lock(&a->sync);
@@ -146,12 +148,13 @@ void *descending_thread(void *arg)
             pthread_mutex_lock(&b->sync);
             size_t la = strlen(a->value);
             size_t lb = strlen(b->value);
+            pthread_mutex_unlock(&b->sync);
+            pthread_mutex_unlock(&prev->sync);
             if (la > lb)
             {
                 counter++;
             }
-            pthread_mutex_unlock(&b->sync);
-            pthread_mutex_unlock(&prev->sync);
+
             prev = a;
             a = a->next;
             pthread_mutex_lock(&a->sync);
@@ -193,12 +196,12 @@ void *equal_thread(void *arg)
             pthread_mutex_lock(&b->sync);
             size_t la = strlen(a->value);
             size_t lb = strlen(b->value);
+            pthread_mutex_unlock(&b->sync);
+            pthread_mutex_unlock(&prev->sync);
             if (la == lb)
             {
                 counter++;
             }
-            pthread_mutex_unlock(&b->sync);
-            pthread_mutex_unlock(&prev->sync);
             prev = a;
             a = a->next;
             pthread_mutex_lock(&a->sync);
@@ -246,8 +249,11 @@ void *swap_thread(void *arg)
                     b->next = a;
                 }
                 pthread_mutex_unlock(&b->sync);
-                pthread_mutex_unlock(&a->sync);
                 pthread_mutex_unlock(&prev->sync);
+                pthread_mutex_unlock(&a->sync);
+                pthread_mutex_lock(&swap_mtx[tid]);
+                swap_success[tid]++;
+                pthread_mutex_unlock(&swap_mtx[tid]);
             }
             else
             {
@@ -258,9 +264,7 @@ void *swap_thread(void *arg)
                     break;
             }
         }
-        pthread_mutex_lock(&swap_mtx[tid]);
-        swap_success[tid]++;
-        pthread_mutex_unlock(&swap_mtx[tid]);
+
     }
     return NULL;
 }

@@ -4,8 +4,10 @@
 #include <pthread.h>
 #include <unistd.h>
 
-int main(int argc, char **argv) {
-    if (argc < 3) {
+int main(int argc, char **argv)
+{
+    if (argc < 3)
+    {
         printf("Usage: %s <list_length> <run_seconds>\n", argv[0]);
         printf("Example: %s 1000 10\n", argv[0]);
         return 1;
@@ -14,7 +16,8 @@ int main(int argc, char **argv) {
     int run_seconds = atoi(argv[2]);
 
     Storage *s = storage_create(n);
-    if (!s) {
+    if (!s)
+    {
         fprintf(stderr, "Failed to create storage\n");
         return 2;
     }
@@ -37,7 +40,8 @@ int main(int argc, char **argv) {
 
     pthread_create(&monitor, NULL, monitor_thread, &targ);
     sleep(run_seconds);
-    stop_flag = 1;
+    
+    atomic_store(&stop_flag, 1);
 
     pthread_join(t_asc, NULL);
     pthread_join(t_desc, NULL);

@@ -20,7 +20,7 @@ pthread_rwlock_t swap_mtx[3] = {
     PTHREAD_RWLOCK_INITIALIZER
 };
 
-volatile int stop_flag = 0;
+atomic_int stop_flag = 0;
 
 static void random_string(char *buf, size_t len)
 {
@@ -36,7 +36,6 @@ Storage *storage_create(size_t n)
     if (!s)
         return NULL;
     srand((unsigned)time(NULL));
-    // create sentinel
     s->sentinel = malloc(sizeof(Node));
     if (!s->sentinel) {
         free(s);
@@ -118,13 +117,12 @@ void *ascending_thread(void *arg)
 
             size_t la = strlen(a->value);
             size_t lb = strlen(b->value);
+            pthread_rwlock_unlock(&b->sync);
+            pthread_rwlock_unlock(&prev->sync);
             if (la < lb)
             {
                 counter++;
             }
-
-            pthread_rwlock_unlock(&b->sync);
-            pthread_rwlock_unlock(&prev->sync);
             prev = a;
             a = a->next;
             pthread_rwlock_rdlock(&a->sync);
@@ -166,12 +164,12 @@ void *descending_thread(void *arg)
             pthread_rwlock_rdlock(&b->sync);
             size_t la = strlen(a->value);
             size_t lb = strlen(b->value);
+            pthread_rwlock_unlock(&b->sync);
+            pthread_rwlock_unlock(&prev->sync);
             if (la > lb)
             {
                 counter++;
             }
-            pthread_rwlock_unlock(&b->sync);
-            pthread_rwlock_unlock(&prev->sync);
             prev = a;
             a = a->next;
             pthread_rwlock_rdlock(&a->sync);
@@ -255,7 +253,7 @@ void *swap_thread(void *arg)
                 pthread_rwlock_unlock(&prev->sync);
                 break;
             }
-            if ((rand() & 4) == 0)
+            if ((rand() & 255) == 0)
             {
                 pthread_rwlock_wrlock(&b->sync);
                 if (prev->next == a && a->next == b)
@@ -268,6 +266,9 @@ void *swap_thread(void *arg)
                 pthread_rwlock_unlock(&b->sync);
                 pthread_rwlock_unlock(&a->sync);
                 pthread_rwlock_unlock(&prev->sync);
+                pthread_rwlock_wrlock(&swap_mtx[tid]);
+                swap_success[tid]++;
+                pthread_rwlock_unlock(&swap_mtx[tid]);
             }
             else
             {
@@ -278,9 +279,7 @@ void *swap_thread(void *arg)
                     break;
             }
         }
-        pthread_rwlock_wrlock(&swap_mtx[tid]);
-        swap_success[tid]++;
-        pthread_rwlock_unlock(&swap_mtx[tid]);
+
     }
     return NULL;
 }

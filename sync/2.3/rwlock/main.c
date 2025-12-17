@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
 
     pthread_create(&monitor, NULL, monitor_thread, &targ);
     sleep(run_seconds);
-    stop_flag = 1;
+    atomic_store(&stop_flag, 1);
 
     pthread_join(t_asc, NULL);
     pthread_join(t_desc, NULL);
